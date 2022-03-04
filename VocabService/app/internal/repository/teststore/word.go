@@ -3,29 +3,30 @@ package teststore
 import (
 	"github.com/VIWET/GoVocab/app/internal/domain"
 	"github.com/VIWET/GoVocab/app/internal/errors"
+	"github.com/VIWET/GoVocab/app/internal/repository"
 )
 
 type wordRepository struct {
-	DB *store
+	db *store
 }
 
-func NewWordRepository() *wordRepository {
+func NewWordRepository(db *store) repository.WordRepository {
 	return &wordRepository{
-		DB: NewStore(),
+		db: db,
 	}
 }
 
 func (r *wordRepository) Create(dto *domain.WordCreateDTO) error {
 	w := domain.Word{
-		ID:   len(r.DB.words) + 1,
+		ID:   len(r.db.words) + 1,
 		Text: dto.Text,
 	}
 
-	r.DB.words[w.ID] = w
+	r.db.words[w.ID] = w
 
 	for _, meaning := range dto.Meanings {
 		m := domain.Meaning{
-			ID:           len(r.DB.meanings) + 1,
+			ID:           len(r.db.meanings) + 1,
 			WordID:       w.ID,
 			TypeOfSpeech: meaning.TypeOfSpeech,
 			Description:  meaning.Description,
@@ -34,34 +35,34 @@ func (r *wordRepository) Create(dto *domain.WordCreateDTO) error {
 
 		for _, useCase := range meaning.UseCases {
 			uc := domain.UseCase{
-				ID:        len(r.DB.usecases) + 1,
+				ID:        len(r.db.usecases) + 1,
 				MeaningID: m.ID,
 				Sample:    useCase.Sample,
 			}
 
-			r.DB.usecases[uc.ID] = uc
+			r.db.usecases[uc.ID] = uc
 		}
 
-		r.DB.meanings[m.ID] = m
+		r.db.meanings[m.ID] = m
 	}
 
 	return nil
 }
 
 func (r *wordRepository) GetSingleWord(id int) (*domain.WordOutputDTO, error) {
-	word, ok := r.DB.words[id]
+	word, ok := r.db.words[id]
 	if !ok {
 		return nil, errors.ErrRecordNotFound
 	}
 
 	var meanings []domain.MeaningOutputDTO
 
-	for _, m := range r.DB.meanings {
+	for _, m := range r.db.meanings {
 		if m.WordID == id {
 
 			var useCases []domain.UseCase
 
-			for _, uc := range r.DB.usecases {
+			for _, uc := range r.db.usecases {
 				if uc.MeaningID == m.ID {
 					useCases = append(useCases, uc)
 				}
@@ -87,7 +88,7 @@ func (r *wordRepository) GetSingleWord(id int) (*domain.WordOutputDTO, error) {
 	return out, nil
 }
 
-func (r *wordRepository) GetRandomWords(n int) ([]domain.Word, error) {
+func (r *wordRepository) GetRandomWords(n int) ([]*domain.WordOutputDTO, error) {
 	return nil, nil
 }
 

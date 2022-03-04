@@ -1,2 +1,9 @@
 addr: ":8080"
 logLevel: "info"
+
+db:
+  host: "localhost"
+  port: "5432"
+  name: "postgres"
+  user: "postgres"
+  password: "postgres"

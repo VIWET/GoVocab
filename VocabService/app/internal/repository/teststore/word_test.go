@@ -1,7 +1,6 @@
 package teststore_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/VIWET/GoVocab/app/internal/domain"
@@ -29,18 +28,21 @@ func TestWordRepository_Create(t *testing.T) {
 		},
 	}
 
-	r := teststore.NewWordRepository()
+	s := teststore.NewStore()
+
+	r := teststore.NewWordRepository(s)
 
 	err := r.Create(dto)
 	assert.NoError(t, err)
-	words, meanings, usecases := r.DB.GetCount()
+	words, meanings, usecases := s.GetCount()
 	assert.Equal(t, 1, words)
 	assert.Equal(t, 1, meanings)
 	assert.Equal(t, 2, usecases)
 }
 
 func TestWordRepository_GetSingleWord(t *testing.T) {
-	r := teststore.NewWordRepository()
+	s := teststore.NewStore()
+	r := teststore.NewWordRepository(s)
 
 	out, err := r.GetSingleWord(1)
 	assert.Error(t, err)
@@ -71,5 +73,4 @@ func TestWordRepository_GetSingleWord(t *testing.T) {
 	out, err = r.GetSingleWord(1)
 	assert.NoError(t, err)
 	assert.NotNil(t, out)
-	fmt.Println(*out)
 }
