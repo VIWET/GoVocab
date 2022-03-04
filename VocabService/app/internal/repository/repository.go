@@ -12,7 +12,7 @@ type ListRepository interface {
 }
 
 type WordRepository interface {
-	Create(lid int, dto *domain.WordCreateDTO) (*domain.Word, error)
+	Create(lid int, dto *domain.WordCreateDTO) (*domain.WordOutputDTO, error)
 	GetSingleWord(id int) (*domain.WordOutputDTO, error)
 	GetRandomWords(n int) ([]*domain.WordOutputDTO, error)
 	Update(w *domain.Word) error

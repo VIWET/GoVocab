@@ -40,6 +40,7 @@ CREATE TABLE meanings (
 CREATE TABLE use_cases (
     id SERIAL,
     meaning_id INT NOT NULL,
+    sample VARCHAR(100) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (meaning_id) REFERENCES meanings(id)
 );

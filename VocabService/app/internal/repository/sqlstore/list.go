@@ -25,7 +25,9 @@ func (r *listRepository) Create(dto *domain.ListCreateDTO) (*domain.List, error)
 	}
 
 	err := r.db.QueryRow(
-		"INSERT INTO lists (user_id, title) VALUES ($1, $2) RETURNING id",
+		"INSERT INTO lists (user_id, title) "+
+			"VALUES ($1, $2) "+
+			"RETURNING id",
 		dto.UserID,
 		dto.Title).Scan(&list.ID)
 	if err != nil {

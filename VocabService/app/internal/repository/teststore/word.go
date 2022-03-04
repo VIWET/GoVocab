@@ -16,7 +16,7 @@ func NewWordRepository(db *store) repository.WordRepository {
 	}
 }
 
-func (r *wordRepository) Create(lid int, dto *domain.WordCreateDTO) (*domain.Word, error) {
+func (r *wordRepository) Create(lid int, dto *domain.WordCreateDTO) (*domain.WordOutputDTO, error) {
 	w := domain.Word{
 		ID:   len(r.db.words) + 1,
 		Text: dto.Text,
