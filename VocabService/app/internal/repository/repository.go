@@ -3,8 +3,8 @@ package repository
 import "github.com/VIWET/GoVocab/app/internal/domain"
 
 type WordRepository interface {
-	Create(w *domain.Word) error
-	GetSingleWord(id int) (domain.Word, error)
+	Create(dto *domain.WordCreateDTO) error
+	GetSingleWord(id int) (*domain.Word, error)
 	GetRandomWords(n int) ([]domain.Word, error)
 	Update(w *domain.Word) error
 	Delete(id int) error

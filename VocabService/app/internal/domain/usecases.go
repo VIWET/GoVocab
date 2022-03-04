@@ -1,7 +1,11 @@
 package domain
 
 type UseCase struct {
-	UUID        int    `json:"id"`
-	MeaningUUID int    `json:"meaningid"`
-	Sample      string `json:"sample"`
+	ID        int    `json:"id"`
+	MeaningID int    `json:"meaningid"`
+	Sample    string `json:"sample"`
+}
+
+type UseCaseCreateDTO struct {
+	Sample string `json:"sample"`
 }
