@@ -16,7 +16,7 @@ func NewWordRepository(db *store) repository.WordRepository {
 	}
 }
 
-func (r *wordRepository) Create(dto *domain.WordCreateDTO) error {
+func (r *wordRepository) Create(lid int, dto *domain.WordCreateDTO) (*domain.Word, error) {
 	w := domain.Word{
 		ID:   len(r.db.words) + 1,
 		Text: dto.Text,
@@ -46,7 +46,7 @@ func (r *wordRepository) Create(dto *domain.WordCreateDTO) error {
 		r.db.meanings[m.ID] = m
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (r *wordRepository) GetSingleWord(id int) (*domain.WordOutputDTO, error) {

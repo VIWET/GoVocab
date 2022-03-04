@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func TestSQLStore(t *testing.T, c *Config) (*sql.DB, func(...string)) {
+func TestSQLDB(t *testing.T, c *Config) (*sql.DB, func(...string)) {
 	t.Helper()
 
 	db, err := sql.Open("postgres", c.GetConnectionString())

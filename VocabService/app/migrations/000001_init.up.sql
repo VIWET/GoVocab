@@ -1,12 +1,13 @@
 CREATE TABLE lists (
     id SERIAL,
-    UserID INT NOT NULL,
+    title VARCHAR(50) NOT NULL,
+    user_id INT NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE words (
     id SERIAL,
-    test VARCHAR(50),
+    text VARCHAR(50),
     PRIMARY KEY (id)
 );
 

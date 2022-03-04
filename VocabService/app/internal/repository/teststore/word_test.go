@@ -32,7 +32,7 @@ func TestWordRepository_Create(t *testing.T) {
 
 	r := teststore.NewWordRepository(s)
 
-	err := r.Create(dto)
+	_, err := r.Create(1, dto)
 	assert.NoError(t, err)
 	words, meanings, usecases := s.GetCount()
 	assert.Equal(t, 1, words)
@@ -67,7 +67,7 @@ func TestWordRepository_GetSingleWord(t *testing.T) {
 		},
 	}
 
-	err = r.Create(dto)
+	_, err = r.Create(1, dto)
 	assert.NoError(t, err)
 
 	out, err = r.GetSingleWord(1)
