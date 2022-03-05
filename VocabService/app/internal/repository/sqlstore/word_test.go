@@ -70,3 +70,48 @@ func TestWordRepository_Create(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, word2)
 }
+
+func TestWordRepository_GetSingleWord(t *testing.T) {
+	db, teardown := sqlstore.TestSQLDB(t, config)
+	defer teardown("lists", "words_lists_relation", "use_cases", "meanings", "words")
+
+	rw := sqlstore.NewWordRepository(db)
+
+	rl := sqlstore.NewListRepository(db)
+
+	dtol := &domain.ListCreateDTO{
+		UserID: 1,
+		Title:  "Test List",
+	}
+
+	l, err := rl.Create(dtol)
+	assert.NoError(t, err)
+	assert.NotNil(t, l)
+
+	dtow := &domain.WordCreateDTO{
+		Text: "Car",
+		Meanings: []domain.MeaningCreateDTO{
+			{
+				TypeOfSpeech: "N (C)",
+				Description:  "Transport",
+				Translation:  "Автомобиль",
+				UseCases: []domain.UseCaseCreateDTO{
+					{
+						Sample: "A blue car",
+					},
+					{
+						Sample: "I usually go to the work by car",
+					},
+				},
+			},
+		},
+	}
+
+	word, err := rw.Create(l.ID, dtow)
+	assert.NoError(t, err)
+	assert.NotNil(t, word)
+
+	word2, err := rw.GetSingleWord(word.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, word, word2)
+}

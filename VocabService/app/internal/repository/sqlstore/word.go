@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/VIWET/GoVocab/app/internal/domain"
+	"github.com/VIWET/GoVocab/app/internal/errors"
 	"github.com/VIWET/GoVocab/app/internal/repository"
 )
 
@@ -86,7 +87,67 @@ func (r *wordRepository) Create(lid int, dto *domain.WordCreateDTO) (*domain.Wor
 }
 
 func (r *wordRepository) GetSingleWord(id int) (*domain.WordOutputDTO, error) {
-	return nil, nil
+	word := &domain.WordOutputDTO{}
+
+	err := r.db.QueryRow(
+		"SELECT id, text "+
+			"FROM words "+
+			"WHERE id = $1",
+		id).Scan(&word.ID, &word.Text)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	rows, err := r.db.Query(
+		"SELECT id, type_of_speech, description, translation "+
+			"FROM meanings "+
+			"WHERE word_id = $1",
+		word.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		m := domain.MeaningOutputDTO{
+			WordID: word.ID,
+		}
+
+		if err := rows.Scan(&m.ID, &m.TypeOfSpeech, &m.Description, &m.Translation); err != nil {
+			return word, err
+		}
+
+		useCases, err := r.db.Query(
+			"SELECT id, sample "+
+				"FROM use_cases "+
+				"WHERE meaning_id = $1",
+			m.ID)
+		if err != nil {
+			return word, err
+		}
+
+		for useCases.Next() {
+			uc := domain.UseCase{
+				MeaningID: m.ID,
+			}
+
+			if err := useCases.Scan(&uc.ID, &uc.Sample); err != nil {
+				return word, nil
+			}
+
+			m.UseCases = append(m.UseCases, uc)
+		}
+
+		useCases.Close()
+
+		word.Meanings = append(word.Meanings, m)
+	}
+
+	return word, nil
 }
 
 func (r *wordRepository) GetRandomWords(n int) ([]*domain.WordOutputDTO, error) {
