@@ -245,5 +245,54 @@ func TestListRepository_Update(t *testing.T) {
 }
 
 func TestListRepository_Delete(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		oldTitle    string
+		title       string
+		list        *domain.List
+		err         error
+	}{
+		{
+			valid:       true,
+			description: "test without errors",
+			oldTitle:    "first list",
+			title:       "new first list",
+			list: &domain.List{
+				Title:  "first list",
+				UserID: 1,
+			},
+			err: nil,
+		},
+		{
+			valid:       false,
+			description: "delete list that wasn't saved to db",
+			oldTitle:    "first list",
+			title:       "new first list",
+			list: &domain.List{
+				Title:  "first list",
+				UserID: 1,
+			},
+			err: errors.ErrRecordNotFound,
+		},
+	}
 
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		r := sqlstore.NewListRepository(db)
+
+		r.Create(test.list)
+
+		if test.valid {
+			err := r.Delete(test.list.ID)
+			assert.NoError(t, err)
+		} else {
+			test.list.ID++
+			err := r.Delete(test.list.ID)
+			assert.ErrorIs(t, err, test.err)
+		}
+
+		teardown("lists")
+	}
 }
