@@ -80,14 +80,36 @@ func (r *listRepository) GetList(id int) (*domain.List, error) {
 	return l, nil
 }
 
+// TODO
 func (r *listRepository) AddWord(id int, wid int) error {
 	return nil
 }
 
 func (r *listRepository) Update(l *domain.List) error {
+	err := r.db.QueryRow(
+		"UPDATE lists SET title = $1 WHERE id = $2 RETURNING id",
+		l.Title,
+		l.ID).Scan(&l.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrRecordNotFound
+		}
+		return err
+	}
+
 	return nil
 }
 
 func (r *listRepository) Delete(id int) error {
+	err := r.db.QueryRow(
+		"DELETE FROM lists WHERE id = $1 RETURNING id",
+		id).Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrRecordNotFound
+		}
+		return err
+	}
+
 	return nil
 }

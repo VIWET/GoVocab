@@ -183,3 +183,67 @@ func TestListRepository_GetList(t *testing.T) {
 		teardown("lists")
 	}
 }
+
+// TODO
+func TestListRepository_AddWord(t *testing.T) {}
+
+func TestListRepository_Update(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		oldTitle    string
+		title       string
+		list        *domain.List
+		err         error
+	}{
+		{
+			valid:       true,
+			description: "test without errors",
+			oldTitle:    "first list",
+			title:       "new first list",
+			list: &domain.List{
+				Title:  "first list",
+				UserID: 1,
+			},
+			err: nil,
+		},
+		{
+			valid:       false,
+			description: "update list with different id",
+			oldTitle:    "first list",
+			title:       "new first list",
+			list: &domain.List{
+				Title:  "first list",
+				UserID: 1,
+			},
+			err: errors.ErrRecordNotFound,
+		},
+	}
+
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		r := sqlstore.NewListRepository(db)
+
+		r.Create(test.list)
+
+		if test.valid {
+			test.list.Title = test.title
+			err := r.Update(test.list)
+			assert.NoError(t, err)
+			tl, _ := r.GetList(test.list.ID)
+			assert.Equal(t, test.title, tl.Title)
+		} else {
+			test.list.Title = test.title
+			test.list.ID++
+			err := r.Update(test.list)
+			assert.ErrorIs(t, err, test.err)
+		}
+
+		teardown("lists")
+	}
+}
+
+func TestListRepository_Delete(t *testing.T) {
+
+}
