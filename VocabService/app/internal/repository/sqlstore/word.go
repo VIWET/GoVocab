@@ -152,5 +152,15 @@ func (r *wordRepository) Update(w *domain.Word) error {
 }
 
 func (r *wordRepository) Delete(id int) error {
+	err := r.db.QueryRow(
+		"DELETE FROM words WHERE id = $1 RETURNING id",
+		id).Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrRecordNotFound
+		}
+		return err
+	}
+
 	return nil
 }

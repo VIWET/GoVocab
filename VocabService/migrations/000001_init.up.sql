@@ -15,7 +15,7 @@ CREATE TABLE words_lists_relation (
     list_id INT NOT NULL,
     word_id INT NOT NULL,
   	FOREIGN KEY (list_id) REFERENCES lists(id), 
-    FOREIGN KEY (word_id) REFERENCES words(id),
+    FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
     UNIQUE (list_id, word_id)
 );
 

@@ -351,7 +351,7 @@ func TestWordRepository_Update(t *testing.T) {
 		},
 		{
 			valid:       false,
-			description: "list doesn't exists",
+			description: "word doesn't exists",
 			list: &domain.List{
 				Title:  "TEST",
 				UserID: 1,
@@ -382,6 +382,61 @@ func TestWordRepository_Update(t *testing.T) {
 			test.word.Text = test.updatedText
 			test.word.ID++
 			err := rw.Update(test.word)
+			assert.ErrorIs(t, err, errors.ErrRecordNotFound)
+		}
+
+		teardown("lists", "words", "words_lists_relation", "synonyms")
+	}
+}
+
+func TestWordRepository_Delete(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		list        *domain.List
+		word        *domain.Word
+	}{
+		{
+			valid:       true,
+			description: "valid example",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST",
+			},
+		},
+		{
+			valid:       false,
+			description: "word doesn't exists",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		rw := sqlstore.NewWordRepository(db)
+		rl := sqlstore.NewListRepository(db)
+
+		rl.Create(test.list)
+		rw.Create(test.list.ID, test.word)
+
+		if test.valid {
+			err := rw.Delete(test.word.ID)
+			assert.NoError(t, err)
+			w, err := rw.GetWord(test.word.ID)
+			assert.ErrorIs(t, err, errors.ErrRecordNotFound)
+			assert.Nil(t, w)
+		} else {
+			err := rw.Delete(test.word.ID + 1)
 			assert.ErrorIs(t, err, errors.ErrRecordNotFound)
 		}
 
