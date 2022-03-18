@@ -7,8 +7,9 @@ type List struct {
 }
 
 type ListCreateDTO struct {
-	UserID int    `json:"uid"`
-	Title  string `json:"title"`
+	UserID int             `json:"uid"`
+	Title  string          `json:"title"`
+	Words  []WordCreateDTO `json:"words"`
 }
 
 type ListOutputDTO struct {

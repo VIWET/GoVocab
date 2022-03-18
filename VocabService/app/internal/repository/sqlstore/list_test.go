@@ -1,7 +1,6 @@
 package sqlstore_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/VIWET/GoVocab/app/internal/domain"
@@ -11,79 +10,176 @@ import (
 )
 
 func TestListRepository_Create(t *testing.T) {
-	db, teardown := sqlstore.TestSQLDB(t, config)
-	defer teardown("lists")
-
-	r := sqlstore.NewListRepository(db)
-
-	dto := &domain.ListCreateDTO{
-		UserID: 1,
-		Title:  "Test List",
+	tests := []struct {
+		valid       bool
+		description string
+		title       string
+		user_id     int
+	}{
+		{
+			valid:       true,
+			description: "valid example",
+			title:       "test 1",
+			user_id:     1,
+		},
 	}
 
-	l, err := r.Create(dto)
-	assert.NoError(t, err)
-	assert.NotNil(t, l)
-}
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
 
-func TestListRepository_GetAllLists(t *testing.T) {
-	db, teardown := sqlstore.TestSQLDB(t, config)
-	defer teardown("lists")
+		r := sqlstore.NewListRepository(db)
 
-	r := sqlstore.NewListRepository(db)
-
-	uid := 1
-
-	lists, err := r.GetAllList(uid)
-	assert.ErrorIs(t, errors.ErrRecordNotFound, err)
-	assert.Nil(t, lists)
-
-	for i := 0; i < 5; i++ {
-		dto := &domain.ListCreateDTO{
-			UserID: uid,
-			Title:  fmt.Sprintf("Test List %d", i),
+		l := &domain.List{
+			Title:  test.title,
+			UserID: test.user_id,
 		}
 
-		l, err := r.Create(dto)
-		assert.NoError(t, err)
-		assert.NotNil(t, l)
+		if test.valid {
+			err := r.Create(l)
+			assert.NoError(t, err)
+			assert.NotEqual(t, 0, l.ID)
+		} else {
+			err := r.Create(l)
+			assert.Error(t, err)
+		}
+
+		teardown("lists")
+	}
+}
+
+func TestListRepository_GetLists(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		userId      int
+		count       int
+		lists       []*domain.List
+		err         error
+	}{
+		{
+			valid:       true,
+			description: "two lists belong to user",
+			userId:      1,
+			count:       2,
+			lists: []*domain.List{
+				{
+					Title:  "first list",
+					UserID: 1,
+				},
+				{
+					Title:  "second list",
+					UserID: 1,
+				},
+			},
+			err: nil,
+		},
+		{
+			valid:       true,
+			description: "only one list belong to user",
+			userId:      1,
+			count:       1,
+			lists: []*domain.List{
+				{
+					Title:  "first list",
+					UserID: 1,
+				},
+				{
+					Title:  "second list",
+					UserID: 2,
+				},
+			},
+			err: nil,
+		},
+		{
+			valid:       false,
+			description: "no records",
+			userId:      1,
+			count:       0,
+			lists:       []*domain.List{},
+			err:         errors.ErrRecordNotFound,
+		},
 	}
 
-	lists, err = r.GetAllList(uid)
-	assert.NoError(t, err)
-	assert.NotNil(t, lists)
-	assert.Equal(t, 5, len(lists))
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		r := sqlstore.NewListRepository(db)
+
+		for _, l := range test.lists {
+			r.Create(l)
+		}
+
+		if test.valid {
+			lists, err := r.GetLists(test.userId)
+			assert.NoError(t, err)
+			assert.Equal(t, test.count, len(lists))
+		} else {
+			lists, err := r.GetLists(test.userId)
+			assert.ErrorIs(t, err, test.err)
+			assert.Equal(t, test.count, len(lists))
+		}
+
+		teardown("lists")
+	}
 }
 
 func TestListRepository_GetList(t *testing.T) {
-	db, teardown := sqlstore.TestSQLDB(t, config)
-	defer teardown("lists, words, words_lists_relation")
-
-	rl := sqlstore.NewListRepository(db)
-
-	dto := &domain.ListCreateDTO{
-		UserID: 1,
-		Title:  "Test List",
+	tests := []struct {
+		valid       bool
+		description string
+		lists       []*domain.List
+		err         error
+	}{
+		{
+			valid:       true,
+			description: "test without errors",
+			lists: []*domain.List{
+				{
+					Title:  "first list",
+					UserID: 1,
+				},
+				{
+					Title:  "second list",
+					UserID: 1,
+				},
+			},
+			err: nil,
+		},
+		{
+			valid:       false,
+			description: "check id bigger than id of created list",
+			lists: []*domain.List{
+				{
+					Title:  "first list",
+					UserID: 1,
+				},
+			},
+			err: errors.ErrRecordNotFound,
+		},
 	}
 
-	l, err := rl.Create(dto)
-	assert.NoError(t, err)
-	assert.NotNil(t, l)
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
 
-	rw := sqlstore.NewWordRepository(db)
+		r := sqlstore.NewListRepository(db)
 
-	for i := 0; i < 10; i++ {
-		wdto := &domain.WordCreateDTO{
-			Text: fmt.Sprintf("Word %d", i+1),
+		for _, l := range test.lists {
+			r.Create(l)
 		}
-		w, err := rw.Create(l.ID, wdto)
-		assert.NoError(t, err)
-		assert.NotNil(t, w)
+
+		if test.valid {
+			for _, tl := range test.lists {
+				list, err := r.GetList(tl.ID)
+				assert.NoError(t, err)
+				assert.Equal(t, tl.ID, list.ID)
+			}
+		} else {
+			tl := test.lists[0]
+			list, err := r.GetList(tl.ID + 1)
+			assert.ErrorIs(t, err, test.err)
+			assert.Nil(t, list)
+		}
+
+		teardown("lists")
 	}
-
-	list, err := rl.GetList(l.UserID, l.ID)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, list)
-	assert.NotEqual(t, 0, len(list.Words))
 }
