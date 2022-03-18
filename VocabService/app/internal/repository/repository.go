@@ -15,6 +15,7 @@ type WordRepository interface {
 	Create(lid int, w *domain.Word) error
 	GetWords(lid int) ([]*domain.Word, error)
 	GetWord(id int) (*domain.Word, error)
+	AddSynonym(wid int, sid int) error
 	GetSynonyms(id int) ([]*domain.Word, error)
 	Update(w *domain.Word) error
 	Delete(id int) error

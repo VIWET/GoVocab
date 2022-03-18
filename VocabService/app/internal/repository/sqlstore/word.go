@@ -92,8 +92,48 @@ func (r *wordRepository) GetWord(id int) (*domain.Word, error) {
 	return w, nil
 }
 
+func (r *wordRepository) AddSynonym(wid int, sid int) error {
+	rows, err := r.db.Query(
+		"INSERT INTO synonyms (word_id, synonym_id) VALUES ($1, $2), ($2, $1)",
+		wid,
+		sid)
+	if err != nil {
+		return err
+	}
+
+	defer rows.Close()
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *wordRepository) GetSynonyms(id int) ([]*domain.Word, error) {
-	return nil, nil
+	rows, err := r.db.Query(
+		"SELECT s.id, s.text FROM words AS s INNER JOIN synonyms AS sw ON sw.synonym_id = s.id WHERE sw.word_id = $1",
+		id)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var synonyms []*domain.Word
+
+	for rows.Next() {
+		s := &domain.Word{}
+		err := rows.Scan(&s.ID, &s.Text)
+		if err != nil {
+			return synonyms, err
+		}
+
+		synonyms = append(synonyms, s)
+	}
+
+	return synonyms, nil
 }
 
 func (r *wordRepository) Update(w *domain.Word) error {
