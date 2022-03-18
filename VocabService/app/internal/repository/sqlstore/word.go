@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/VIWET/GoVocab/app/internal/domain"
+	"github.com/VIWET/GoVocab/app/internal/errors"
 	"github.com/VIWET/GoVocab/app/internal/repository"
 )
 
@@ -49,7 +50,29 @@ func (r *wordRepository) Create(lid int, w *domain.Word) error {
 }
 
 func (r *wordRepository) GetWords(lid int) ([]*domain.Word, error) {
-	return nil, nil
+	rows, err := r.db.Query("SELECT w.id, w.text FROM words AS w INNER JOIN words_lists_relation AS wl ON w.id = wl.word_id WHERE wl.list_id = $1", lid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var words []*domain.Word
+
+	for rows.Next() {
+		word := &domain.Word{}
+		err := rows.Scan(&word.ID, &word.Text)
+		if err != nil {
+			return words, nil
+		}
+
+		words = append(words, word)
+	}
+
+	if len(words) == 0 {
+		return nil, errors.ErrRecordNotFound
+	}
+
+	return words, nil
 }
 
 func (r *wordRepository) GetWord(id int) (*domain.Word, error) {
