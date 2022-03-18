@@ -328,3 +328,63 @@ func TestWordRepository_GetSynonyms(t *testing.T) {
 		teardown("lists", "words", "words_lists_relation", "synonyms")
 	}
 }
+
+func TestWordRepository_Update(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		list        *domain.List
+		word        *domain.Word
+		updatedText string
+	}{
+		{
+			valid:       true,
+			description: "valid example",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST",
+			},
+			updatedText: "New test",
+		},
+		{
+			valid:       false,
+			description: "list doesn't exists",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST",
+			},
+			updatedText: "New test",
+		},
+	}
+
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		rw := sqlstore.NewWordRepository(db)
+		rl := sqlstore.NewListRepository(db)
+
+		rl.Create(test.list)
+		rw.Create(test.list.ID, test.word)
+
+		if test.valid {
+			test.word.Text = test.updatedText
+			err := rw.Update(test.word)
+			assert.NoError(t, err)
+			w, _ := rw.GetWord(test.word.ID)
+			assert.Equal(t, test.updatedText, w.Text)
+		} else {
+			test.word.Text = test.updatedText
+			test.word.ID++
+			err := rw.Update(test.word)
+			assert.ErrorIs(t, err, errors.ErrRecordNotFound)
+		}
+
+		teardown("lists", "words", "words_lists_relation", "synonyms")
+	}
+}

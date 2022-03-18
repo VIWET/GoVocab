@@ -137,6 +137,17 @@ func (r *wordRepository) GetSynonyms(id int) ([]*domain.Word, error) {
 }
 
 func (r *wordRepository) Update(w *domain.Word) error {
+	err := r.db.QueryRow(
+		"UPDATE words SET text = $1 WHERE id = $2 RETURNING id",
+		w.Text,
+		w.ID).Scan(&w.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.ErrRecordNotFound
+		}
+		return err
+	}
+
 	return nil
 }
 
