@@ -17,9 +17,37 @@ func NewWordRepository(db *sql.DB) repository.WordRepository {
 	}
 }
 
-func (r *wordRepository) Create(lid int, dto *domain.Word) error {
+func (r *wordRepository) Create(lid int, w *domain.Word) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	err = tx.QueryRow(
+		"INSERT INTO words (text) VALUES ($1) RETURNING id",
+		w.Text).Scan(&w.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.QueryRow(
+		"INSERT INTO words_lists_relation (list_id, word_id) VALUES ($1, $2) RETURNING word_id",
+		lid,
+		w.ID).Scan(&w.ID)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
+
 func (r *wordRepository) GetWords(lid int) ([]*domain.Word, error) {
 	return nil, nil
 }

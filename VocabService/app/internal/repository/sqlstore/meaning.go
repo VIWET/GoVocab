@@ -17,7 +17,7 @@ func NewMeaningRepository(db *sql.DB) repository.MeaningRepository {
 	}
 }
 
-func (r *meaningRepository) Create(wid int, dto *domain.Meaning) error {
+func (r *meaningRepository) Create(wid int, m *domain.Meaning) error {
 	return nil
 }
 

@@ -17,7 +17,7 @@ func NewUseCaseRepository(db *sql.DB) repository.UseCaseRepository {
 	}
 }
 
-func (r *useCaseRepository) Create(mid int, dto *domain.UseCase) error {
+func (r *useCaseRepository) Create(mid int, uc *domain.UseCase) error {
 	return nil
 }
 
