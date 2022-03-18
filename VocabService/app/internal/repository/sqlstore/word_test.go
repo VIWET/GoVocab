@@ -124,3 +124,57 @@ func TestWordRepository_GetWords(t *testing.T) {
 		teardown("lists", "words", "words_lists_relation")
 	}
 }
+
+func TestWordRepository_GetWord(t *testing.T) {
+	tests := []struct {
+		valid       bool
+		description string
+		list        *domain.List
+		word        *domain.Word
+	}{
+		{
+			valid:       true,
+			description: "valid example",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST 1",
+			},
+		},
+		{
+			valid:       false,
+			description: "word doesn't exists",
+			list: &domain.List{
+				Title:  "TEST",
+				UserID: 1,
+			},
+			word: &domain.Word{
+				Text: "TEST 1",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		db, teardown := sqlstore.TestSQLDB(t, config)
+
+		rw := sqlstore.NewWordRepository(db)
+		rl := sqlstore.NewListRepository(db)
+
+		rl.Create(test.list)
+		rw.Create(test.list.ID, test.word)
+
+		if test.valid {
+			word, err := rw.GetWord(test.word.ID)
+			assert.NoError(t, err)
+			assert.Equal(t, test.word.Text, word.Text)
+		} else {
+			word, err := rw.GetWord(test.word.ID + 1)
+			assert.ErrorIs(t, err, errors.ErrRecordNotFound)
+			assert.Nil(t, word)
+		}
+
+		teardown("lists", "words", "words_lists_relation")
+	}
+}

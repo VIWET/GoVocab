@@ -76,7 +76,20 @@ func (r *wordRepository) GetWords(lid int) ([]*domain.Word, error) {
 }
 
 func (r *wordRepository) GetWord(id int) (*domain.Word, error) {
-	return nil, nil
+	w := &domain.Word{
+		ID: id,
+	}
+	err := r.db.QueryRow(
+		"SELECT text FROM words WHERE id = $1",
+		id).Scan(&w.Text)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.ErrRecordNotFound
+		}
+		return nil, err
+	}
+
+	return w, nil
 }
 
 func (r *wordRepository) GetSynonyms(id int) ([]*domain.Word, error) {
